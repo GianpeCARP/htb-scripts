@@ -133,6 +133,55 @@ function martingala(){
   tput cnorm #Recuperar el cursor
 }
 
+function inverseLabrouchere(){
+  echo -e "\n${yellowColour}[+]${endColour}${greyColour} Dinero actual${endColour} ${greenColour}$money\$${endColour}"
+  echo -ne "${yellowColour}[+]${endColour}${greyColour} ¿A qué deseas apostar contínuamente?${endColour} ${purpleColour}(${endColour}${turquoiseColour}par${endColour}${purpleColour}/${endColour}${turquoiseColour}impar${endColour}${purpleColour})${endColour} ${blueColour}->${endColour} " && read par_impar
+  
+  declare -a my_Sequence=(1 2 3 4) # -a declara un Array (lista)
+
+  bet=$((${my_Sequence[0]} + ${my_Sequence[-1]}))
+
+  tput civis
+
+  while true; do
+    random_number=$(($RANDOM % 37))
+    let money-=$bet
+
+    echo -e "[+] Invertimos: ${greenColour}$bet\$${endColour}" 
+    echo -e "[+] Dinero actual: ${greenColour}$money\$${endColour}"
+
+    echo -e "[+] Ha salido el número ${blueColour}$random_number${endColour}"
+
+    if [ "$par_impar" == "par" ]; then
+      if [ "$(($random_number % 2))" -eq 0 ]; then
+        if [ $random_number == 0 ]; then
+          echo -e "[+] Salió el 0, pierdes"
+        else
+          echo -e "[+] El número es par, ¡GANAS!"
+          reward=$(($bet*2))
+          let money+=$reward
+          echo -e "[+] Dinero actualizado: ${greenColour}$money\$${endColour}"
+          
+          my_Sequence+=($bet)
+          my_Sequence=(${my_Sequence[@]}) #Actualizamos el Array
+
+          echo -e "[+] Nuestra nueva secuencia es: [${my_Sequence[@]}]"
+          
+          if [ ${#my_Sequence[@]} -ne 1 ]; then
+            bet=$((${my_Sequence[0]} + ${my_Sequence[-1]})) 
+          else 
+            bet=${my_Sequence[0]}
+          fi
+        fi 
+      else
+        echo -e "[+] El número es impar, pierdes"
+      fi
+    fi
+
+    sleep 5
+  done
+  tput cnorm
+}
 
 while getopts "m:t:h" arg; do
   case $arg in
@@ -145,6 +194,8 @@ done
 if [ $money ] && [ $technique ]; then
   if [ $technique == "martingala" ]; then
     martingala
+  elif [ $technique == "inverseLabrouchere" ]; then
+    inverseLabrouchere
   else
     echo -e "\n${redColour}[!] La técnica introducida no existe${endColour}"
     helpPanel
